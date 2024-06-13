@@ -1,12 +1,12 @@
 <script>
     import { createEventDispatcher } from 'svelte';
     import axios from 'axios';
-
     let place = '';
     let places = [];
     let selectedPlaceId = null;
     let startDate = '';
     let endDate = '';
+    let isLoading = false;  // Add this line to track the loading state
 
     const dispatch = createEventDispatcher();
 
@@ -23,6 +23,7 @@
     async function fetchIdentifications() {
         if (!selectedPlaceId) return;
 
+        isLoading = true;  // Start loading
         try {
             const identificationsResponse = await axios.get(`https://api.inaturalist.org/v1/observations?place_id=${selectedPlaceId}&d1=${startDate}&d2=${endDate}`);
             let identifications = identificationsResponse.data.results;
@@ -44,6 +45,8 @@
         } catch (error) {
             console.error(error);
             dispatch('identifications', { identifications: [] });
+        } finally {
+            isLoading = false;  // Stop loading
         }
     }
 
@@ -74,6 +77,13 @@
         </li>
     {/each}
 </ul>
+
+{#if isLoading}
+    <div class="spinner-container">
+        <div class="loading">Loading</div>
+        <div class="spinner"></div>
+    </div>
+{/if}
 
 <style>
     form {
@@ -134,4 +144,31 @@
     li button:hover {
         background-color: #e2e6ea;
     }
+    .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #007bff;
+    animation: spin 1s linear infinite;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+.loading{
+    text-align: center;
+    font-size: 1.5em;
+    color: #495057;
+    margin-top: 20px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
 </style>
